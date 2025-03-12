@@ -10,11 +10,11 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
     previous[source] = -1;
 
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> minHeap;
-    minHeap.push({source, 0});
+    minHeap.push({0, source});
 
     while(!minHeap.empty()){
-        int u = minHeap.top().first;
-        int dist = minHeap.top().second;
+        int u = minHeap.top().second;
+        int dist = minHeap.top().first;
         minHeap.pop();
 
         if(visited[u]){
