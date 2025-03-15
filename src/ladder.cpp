@@ -47,15 +47,17 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {begin_word};
     }
 
-    // Queue to store partial ladders
     queue<vector<string>> ladder_queue;
     ladder_queue.push({begin_word});
 
-    // Set to keep track of visited words
     set<string> visited;
     visited.insert(begin_word);
 
     while(!ladder_queue.empty()){
+        if(ladder_queue.size() > word_list.size()){
+            break;
+        }
+
         vector<string> ladder = ladder_queue.front();
         ladder_queue.pop();
         string last_word = ladder.back();
@@ -91,21 +93,19 @@ void load_words(set<string> & word_list, const string& file_name){
 }
 
 void print_word_ladder(const vector<string>& ladder){
-    if (ladder.empty()) {
+    if(ladder.empty()){
+        cout << "No word ladder found.\n";
         return;
     }
 
-    for (size_t i = 0; i < ladder.size(); ++i) {
-        cout << ladder[i];
-        if (i < ladder.size() - 1) {
-            cout << " ";
-        }
+    for(size_t i = 0; i < ladder.size(); ++i){
+        cout << ladder[i] << " ";
     }
     cout << endl;
 }
 
 void verify_word_ladder(set<string> & word_list, const vector<string>& ladder){
-    if (ladder.empty()) {
+    if(ladder.empty()){
         cout << "Ladder is empty." << endl;
         return;
     }
