@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 #include "ladder.h"
 
@@ -9,33 +10,36 @@ void error(string word1, string word2, string msg){
 }
 
 bool edit_distance_within(const std::string& str1, const std::string& str2, int d){
-    int len1 = str1.length();
-    int len2 = str2.length();
-
-    if(abs(len1 - len2) > d){
+    int len1 = str1.length(), len2 = str2.length();
+    if (abs(len1 - len2) > d){
         return false;
     }
 
-    vector<vector<int>> dp(len1 + 1, vector<int>(len2 + 1, 0));
+    vector<int> prev(len2 + 1), curr(len2 + 1);
 
-    for(int i = 0; i <= len1; ++i){
-        for(int j = 0; j <= len2; ++j){
-            if(i == 0){
-                dp[i][j] = j;
-            }
-            else if(j == 0){
-                dp[i][j] = i;
-            }
-            else if(str1[i - 1] == str2[j - 1]){
-                dp[i][j] = dp[i - 1][j - 1];
-            }
-            else{
-                dp[i][j] = min(min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]) + 1;
-            }
-        }
+    for (int j = 0; j <= len2; ++j){
+        prev[j] = j;
     }
 
-    return dp[len1][len2] <= d;
+    for (int i = 1; i <= len1; ++i) {
+        curr[0] = i;
+
+        bool all_exceed_d = true;
+        for (int j = 1; j <= len2; ++j) {
+            if (str1[i - 1] == str2[j - 1]) {
+                curr[j] = prev[j - 1];
+            } else {
+                curr[j] = min({prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + 1});
+            }
+
+            if (curr[j] <= d) all_exceed_d = false;
+        }
+
+        if (all_exceed_d) return false;
+        swap(prev, curr);
+    }
+
+    return prev[len2] <= d;
 }
 
 bool is_adjacent(const string& word1, const string& word2){
@@ -98,6 +102,7 @@ void print_word_ladder(const vector<string>& ladder){
         return;
     }
 
+    cout << "Word ladder found: ";
     for(size_t i = 0; i < ladder.size(); ++i){
         cout << ladder[i] << " ";
     }
