@@ -44,40 +44,38 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
 
 bool is_adjacent(const string& word1, const string& word2) {
     int len1 = word1.length(), len2 = word2.length();
-    
-    // If length difference is greater than 1, they can't be adjacent
+
+    if (word1 == word2) return true;
     if (abs(len1 - len2) > 1) return false;
 
-    // Case 1: Same length → Check for **one-character substitution**
     if (len1 == len2) {
         int diff_count = 0;
         for (size_t i = 0; i < len1; i++) {
             if (word1[i] != word2[i]) {
                 diff_count++;
-                if (diff_count > 1) return false;  // More than one substitution → Not adjacent
+                if (diff_count > 1) return false;
             }
         }
-        return diff_count == 1;  // Must be exactly one substitution
+        return diff_count == 1;
     }
 
-    // Case 2: Length differs by one → Check for **one-character insertion/deletion**
-    const string &shorter = (len1 < len2) ? word1 : word2;
-    const string &longer = (len1 < len2) ? word2 : word1;
+    const string& shorter = (len1 < len2) ? word1 : word2;
+    const string& longer = (len1 < len2) ? word2 : word1;
 
     size_t i = 0, j = 0;
     bool found_difference = false;
 
     while (i < shorter.length() && j < longer.length()) {
         if (shorter[i] != longer[j]) {
-            if (found_difference) return false;  // More than one difference → Not adjacent
+            if (found_difference) return false;
             found_difference = true;
-            j++;  // Skip one character in the longer word
+            j++;
         } else {
-            i++, j++;  // Move both pointers
+            i++, j++;
         }
     }
 
-    return true;  // If we exit loop, it's a valid one-character insertion/deletion
+    return true;
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list){
