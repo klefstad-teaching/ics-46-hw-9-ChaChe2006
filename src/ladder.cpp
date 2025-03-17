@@ -47,6 +47,9 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
+
+    if (word1 == word2) return true;
+
     int len1 = word1.length(), len2 = word2.length();
 
     // Words must be the same length or differ by one character
@@ -144,8 +147,12 @@ vector<string> get_adjacent_words(const string& word, const unordered_map<string
         }
     }
 
+    // Sort adjacent words alphabetically
+    sort(adjacent_words.begin(), adjacent_words.end());
+
     return adjacent_words;
 }
+
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
         cout << "Invalid Input. Begin word is the same as end word.";
