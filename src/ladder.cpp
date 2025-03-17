@@ -47,15 +47,12 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
-
     if (word1 == word2) return true;
 
     int len1 = word1.length(), len2 = word2.length();
 
-    // Words must be the same length or differ by one character
     if (abs(len1 - len2) > 1) return false;
 
-    // If lengths are equal, check for single substitution
     if (len1 == len2) {
         int diff_count = 0;
         for (int i = 0; i < len1; ++i) {
@@ -67,7 +64,6 @@ bool is_adjacent(const string& word1, const string& word2) {
         return diff_count == 1;
     }
 
-    // If lengths differ by 1, check for single insertion/deletion
     const string& shorter = (len1 < len2) ? word1 : word2;
     const string& longer = (len1 < len2) ? word2 : word1;
 
@@ -78,7 +74,7 @@ bool is_adjacent(const string& word1, const string& word2) {
         if (shorter[i] != longer[j]) {
             diff_count++;
             if (diff_count > 1) return false;
-            j++; // Skip one character in the longer word
+            j++;
         } else {
             i++, j++;
         }
@@ -100,7 +96,6 @@ unordered_map<string, vector<string>> build_wildcard_map(const set<string>& word
             wildcard_map[wildcard].push_back(word);
         }
 
-        // Handle insertions
         for (size_t i = 0; i <= word.length(); ++i) {
             string wildcard = word.substr(0, i) + '*' + word.substr(i);
             wildcard_map[wildcard].push_back(word);
@@ -113,10 +108,9 @@ unordered_map<string, vector<string>> build_wildcard_map(const set<string>& word
 vector<string> get_adjacent_words(const string& word, const unordered_map<string, vector<string>>& wildcard_map) {
     vector<string> adjacent_words;
 
-    // Handle substitutions and deletions
     for (size_t i = 0; i < word.length(); ++i) {
         string wildcard = word;
-        wildcard[i] = '*'; // Substitution
+        wildcard[i] = '*';
         if (wildcard_map.count(wildcard)) {
             for (const string& adjacent : wildcard_map.at(wildcard)) {
                 if (adjacent != word && is_adjacent(word, adjacent)) {
@@ -125,7 +119,7 @@ vector<string> get_adjacent_words(const string& word, const unordered_map<string
             }
         }
 
-        wildcard = word.substr(0, i) + '*' + word.substr(i + 1); // Deletion
+        wildcard = word.substr(0, i) + '*' + word.substr(i + 1);
         if (wildcard_map.count(wildcard)) {
             for (const string& adjacent : wildcard_map.at(wildcard)) {
                 if (adjacent != word && is_adjacent(word, adjacent)) {
@@ -135,9 +129,8 @@ vector<string> get_adjacent_words(const string& word, const unordered_map<string
         }
     }
 
-    // Handle insertions
     for (size_t i = 0; i <= word.length(); ++i) {
-        string wildcard = word.substr(0, i) + '*' + word.substr(i); // Insertion
+        string wildcard = word.substr(0, i) + '*' + word.substr(i);
         if (wildcard_map.count(wildcard)) {
             for (const string& adjacent : wildcard_map.at(wildcard)) {
                 if (adjacent != word && is_adjacent(word, adjacent)) {
@@ -147,7 +140,6 @@ vector<string> get_adjacent_words(const string& word, const unordered_map<string
         }
     }
 
-    // Sort adjacent words alphabetically
     sort(adjacent_words.begin(), adjacent_words.end());
 
     return adjacent_words;
@@ -159,7 +151,6 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {};
     }
 
-    // Build the wildcard map
     auto wildcard_map = build_wildcard_map(word_list);
 
     queue<vector<string>> ladder_queue;
@@ -172,8 +163,7 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         vector<string> ladder = ladder_queue.front();
         ladder_queue.pop();
         string last_word = ladder.back();
-
-        // Get adjacent words using wildcards and is_adjacent()
+        
         vector<string> adjacent_words = get_adjacent_words(last_word, wildcard_map);
 
         for (const string& word : adjacent_words) {
