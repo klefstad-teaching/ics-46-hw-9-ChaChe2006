@@ -1,5 +1,9 @@
 #include <iostream>
 #include <algorithm>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <set>
 
 #include "ladder.h"
 
@@ -45,12 +49,13 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
 bool is_adjacent(const string& word1, const string& word2) {
     int len1 = word1.length(), len2 = word2.length();
 
-    if (word1 == word2) return true;
+    // Words must be the same length or differ by one character
     if (abs(len1 - len2) > 1) return false;
 
+    // If lengths are equal, check for single substitution
     if (len1 == len2) {
         int diff_count = 0;
-        for (size_t i = 0; i < len1; i++) {
+        for (int i = 0; i < len1; ++i) {
             if (word1[i] != word2[i]) {
                 diff_count++;
                 if (diff_count > 1) return false;
@@ -59,17 +64,18 @@ bool is_adjacent(const string& word1, const string& word2) {
         return diff_count == 1;
     }
 
+    // If lengths differ by 1, check for single insertion/deletion
     const string& shorter = (len1 < len2) ? word1 : word2;
     const string& longer = (len1 < len2) ? word2 : word1;
 
-    size_t i = 0, j = 0;
-    bool found_difference = false;
+    int i = 0, j = 0;
+    int diff_count = 0;
 
     while (i < shorter.length() && j < longer.length()) {
         if (shorter[i] != longer[j]) {
-            if (found_difference) return false;
-            found_difference = true;
-            j++;
+            diff_count++;
+            if (diff_count > 1) return false;
+            j++; // Skip one character in the longer word
         } else {
             i++, j++;
         }
@@ -78,12 +84,76 @@ bool is_adjacent(const string& word1, const string& word2) {
     return true;
 }
 
-vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list){
+unordered_map<string, vector<string>> build_wildcard_map(const set<string>& word_list) {
+    unordered_map<string, vector<string>> wildcard_map;
 
-    if(begin_word == end_word){
+    for (const string& word : word_list) {
+        for (size_t i = 0; i < word.length(); ++i) {
+            string wildcard = word;
+            wildcard[i] = '*';
+            wildcard_map[wildcard].push_back(word);
+
+            wildcard = word.substr(0, i) + '*' + word.substr(i + 1);
+            wildcard_map[wildcard].push_back(word);
+        }
+
+        // Handle insertions
+        for (size_t i = 0; i <= word.length(); ++i) {
+            string wildcard = word.substr(0, i) + '*' + word.substr(i);
+            wildcard_map[wildcard].push_back(word);
+        }
+    }
+
+    return wildcard_map;
+}
+
+vector<string> get_adjacent_words(const string& word, const unordered_map<string, vector<string>>& wildcard_map) {
+    vector<string> adjacent_words;
+
+    // Handle substitutions and deletions
+    for (size_t i = 0; i < word.length(); ++i) {
+        string wildcard = word;
+        wildcard[i] = '*'; // Substitution
+        if (wildcard_map.count(wildcard)) {
+            for (const string& adjacent : wildcard_map.at(wildcard)) {
+                if (adjacent != word && is_adjacent(word, adjacent)) {
+                    adjacent_words.push_back(adjacent);
+                }
+            }
+        }
+
+        wildcard = word.substr(0, i) + '*' + word.substr(i + 1); // Deletion
+        if (wildcard_map.count(wildcard)) {
+            for (const string& adjacent : wildcard_map.at(wildcard)) {
+                if (adjacent != word && is_adjacent(word, adjacent)) {
+                    adjacent_words.push_back(adjacent);
+                }
+            }
+        }
+    }
+
+    // Handle insertions
+    for (size_t i = 0; i <= word.length(); ++i) {
+        string wildcard = word.substr(0, i) + '*' + word.substr(i); // Insertion
+        if (wildcard_map.count(wildcard)) {
+            for (const string& adjacent : wildcard_map.at(wildcard)) {
+                if (adjacent != word && is_adjacent(word, adjacent)) {
+                    adjacent_words.push_back(adjacent);
+                }
+            }
+        }
+    }
+
+    return adjacent_words;
+}
+vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
+    if (begin_word == end_word) {
         cout << "Invalid Input. Begin word is the same as end word.";
         return {};
     }
+
+    // Build the wildcard map
+    auto wildcard_map = build_wildcard_map(word_list);
 
     queue<vector<string>> ladder_queue;
     ladder_queue.push({begin_word});
@@ -91,20 +161,19 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     set<string> visited;
     visited.insert(begin_word);
 
-    while(!ladder_queue.empty()){
-        if(ladder_queue.size() > word_list.size()){
-            break;
-        }
-
+    while (!ladder_queue.empty()) {
         vector<string> ladder = ladder_queue.front();
         ladder_queue.pop();
         string last_word = ladder.back();
 
-        for(const string& word : word_list){
-            if(visited.find(word) == visited.end() && is_adjacent(last_word, word)){
+        // Get adjacent words using wildcards and is_adjacent()
+        vector<string> adjacent_words = get_adjacent_words(last_word, wildcard_map);
+
+        for (const string& word : adjacent_words) {
+            if (visited.find(word) == visited.end()) {
                 vector<string> new_ladder = ladder;
                 new_ladder.push_back(word);
-                if(word == end_word){
+                if (word == end_word) {
                     return new_ladder;
                 }
                 visited.insert(word);
